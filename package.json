@@ -1,0 +1,25 @@
+{
+  "name": "forge-crypto",
+  "version": "1.0.0",
+  "description": "Discord bot for crypto currency look-up",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlueSkunka/forge-crypto.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "crypto",
+    "forge"
+  ],
+  "author": "Quentin Somveille",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BlueSkunka/forge-crypto/issues"
+  },
+  "homepage": "https://github.com/BlueSkunka/forge-crypto#readme"
+}
