@@ -21,8 +21,5 @@
   "bugs": {
     "url": "https://github.com/BlueSkunka/forge-crypto/issues"
   },
-  "homepage": "https://github.com/BlueSkunka/forge-crypto#readme",
-  "dependencies": {
-    "discord.js": "^13.3.1"
-  }
+  "homepage": "https://github.com/BlueSkunka/forge-crypto#readme"
 }
