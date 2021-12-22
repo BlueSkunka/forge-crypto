@@ -1,6 +1,7 @@
 //: /get {pair}
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { apiToken } = require('../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
