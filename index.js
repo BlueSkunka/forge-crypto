@@ -10,7 +10,7 @@ client.commands = new Collection();
 
 // Read commands folder
 const commandFiles = fs
-  .readdirSync("./commands")
+  .readdirSync("commands")
   .filter((file) => file.endsWith(".js"));
 
 // Register commands
