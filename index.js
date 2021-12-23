@@ -2,15 +2,16 @@
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
 const { token } = require("./config.json");
+const { dirname } = require("path");
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.commands = new Collection();
-
+console.log(__dirname);
 // Read commands folder
 const commandFiles = fs
-  .readdirSync("commands")
+  .readdirSync(__dirname.concat("/commands"))
   .filter((file) => file.endsWith(".js"));
 
 // Register commands
