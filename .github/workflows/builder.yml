@@ -2,9 +2,9 @@ name: node js cli
 
 on:
   push:
-    branches: [master]
+    branches: [feat/github-action]
   pull_request:
-    branches: [master]
+    branches: [feat/github-action]
 
 jobs:
   build:
