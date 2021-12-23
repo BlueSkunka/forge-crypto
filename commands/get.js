@@ -4,6 +4,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { apiToken } = require("../config.json");
 const rp = require("request-promise");
 const DEFAULT_CONVERT = "USD";
+const DEFAULT_PERIOD = "24h";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,6 +19,14 @@ module.exports = {
           "Insert a crypto currency symbol like 'btc' or with pairing 'btc/usdt'. Default pairing: usdt "
         )
         .setRequired(true)
+    ).addStringOption((option) =>
+      option.setName("period")
+        .setDescription("Define the period to return percent change")
+        .setRequired(false)
+        .addChoice("1 heure", "1h")
+        .addChoice("24 heures", "24h")
+        .addChoice("7 jours", "7d")
+        .addChoice("30 jours", "30d")
     ),
   async execute(interaction) {
     // Deconstruct command option Symbol
@@ -54,14 +63,15 @@ module.exports = {
 
         const name = currency["name"];
         const price = quote["price"].toFixed(5);
-        const percent = quote["percent_change_1h"].toFixed(2);
+        const period = !interaction.options.getString("period") ? DEFAULT_PERIOD : interaction.options.getString("period");
+        const percent = quote["percent_change_" + period].toFixed(2);
 
-        interaction.reply(`${name}: ${price} ${convert} | ${percent}%`);
+        interaction.reply(`${name}: ${price} ${convert} | ${percent}%  ${period}`);
       })
       .catch((err) => {
         console.log("API call error:", err.message);
         interaction.reply(
-          "There was an error while fetching currency informations. \nPlease check that you entered a existing currency / pairing."
+          "There was an error while fetching currency informations. \nPlease check that you entered a existing currency / pairing or period."
         );
       });
   },
