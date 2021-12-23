@@ -1,10 +1,14 @@
-name: node js cli
+name: test deploy-commands.js
 
 on:
   push:
-    branches: [feat/github-action]
+    branches:
+      - master
+      - feat/github-action
+
   pull_request:
-    branches: [feat/github-action]
+    branches:
+      - master
 
 jobs:
   build:
