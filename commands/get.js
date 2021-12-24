@@ -3,8 +3,12 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { apiToken } = require("../config.json");
 const rp = require("request-promise");
+const { MessageEmbed } = require("discord.js");
 const DEFAULT_CONVERT = "USD";
 const DEFAULT_PERIOD = "24h";
+const QUICKCHART_BASEURL = "https://quickchart.io";
+const QUICKCHART_BASEPATH = "/chart/create";
+let chartEmbed = {};
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,8 +23,10 @@ module.exports = {
           "Insert a crypto currency symbol like 'btc' or with pairing 'btc/usdt'. Default pairing: usdt "
         )
         .setRequired(true)
-    ).addStringOption((option) =>
-      option.setName("period")
+    )
+    .addStringOption((option) =>
+      option
+        .setName("period")
         .setDescription("Define the period to return percent change")
         .setRequired(false)
         .addChoice("1 heure", "1h")
@@ -29,6 +35,7 @@ module.exports = {
         .addChoice("30 jours", "30d")
     ),
   async execute(interaction) {
+    //#region const
     // Deconstruct command option Symbol
     const pairing = interaction.options
       .getString("symbol")
@@ -53,6 +60,50 @@ module.exports = {
       json: true,
       gzip: true,
     };
+    //#endregion cosnt
+
+    //#region chart
+    const graph = {
+      chart: {
+        type: "bar", // Show a bar chart
+        data: {
+          labels: [2012, 2013, 2014, 2015, 2016], // Set X-axis labels
+          datasets: [
+            {
+              label: "Users", // Create the 'Users' dataset
+              data: [120, 60, 50, 180, 120], // Add data to the chart
+            },
+          ],
+        },
+      },
+    };
+
+    const requestOptionsGraph = {
+      method: "POST",
+      uri: "https://quickchart.io/chart/create",
+      body: graph,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      json: true,
+    };
+
+    await rp(requestOptionsGraph)
+      .then((response) => {
+        console.log(response);
+        chartEmbed = new MessageEmbed({
+          title: "Title",
+          description: "Description with useless content.",
+          color: "YELLOW",
+          image: {
+            url: response["url"],
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    //#endregion
 
     //: Request Crypto Market Cap Api
     await rp(requestOptions)
@@ -63,10 +114,14 @@ module.exports = {
 
         const name = currency["name"];
         const price = quote["price"].toFixed(5);
-        const period = !interaction.options.getString("period") ? DEFAULT_PERIOD : interaction.options.getString("period");
+        const period = !interaction.options.getString("period")
+          ? DEFAULT_PERIOD
+          : interaction.options.getString("period");
         const percent = quote["percent_change_" + period].toFixed(2);
 
-        interaction.reply(`${name}: ${price} ${convert} | ${percent}%  ${period}`);
+        interaction.reply(
+          `${name}: ${price} ${convert} | ${percent}%  ${period}`
+        );
       })
       .catch((err) => {
         console.log("API call error:", err.message);
