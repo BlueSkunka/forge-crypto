@@ -26,7 +26,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: creating config.json
         run: touch ./config.json
-      - run: 'echo {    "token": "",    "clientId": "",    "guildId": "",    "apiToken": ""} >> ./config.json'
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GUILD_ID: ${{ secrets.GUILD_ID }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+      - run: 'echo {    "token": "$env:TOKEN",    "clientId": "$env:CLIENT_ID",    "guildId": "$env:GUILD_ID",    "apiToken": "$env:API_TOKEN"} >> ./config.json'
       - name: install dependencies
         run: npm ci
       - run: node deploy-commands.js
