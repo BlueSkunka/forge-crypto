@@ -3,131 +3,123 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { apiToken } = require("../config.json");
 const rp = require("request-promise");
-const { MessageEmbed } = require("discord.js");
-const DEFAULT_CONVERT = "USD";
-const DEFAULT_PERIOD = "24h";
-const QUICKCHART_BASEURL = "https://quickchart.io";
-const QUICKCHART_BASEPATH = "/chart/create";
+const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { Chart } = require("chart.js");
+const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
+const DEFAULT_COIN = "bitcoin";
+const DEFAULT_CONVERT = "usd";
+const DEFAULT_PERIOD = 60 * 60 * 24 - 1; //24h
+const DEFAULT_GRANULARITY = 1;
+const COINGECKO_API =
+  "https://api.coingecko.com/api/v3/coins/__id__/market_chart/range";
 let chartEmbed = {};
+let coinData = {};
+
+const generateCanva = async (labels, datas, convert) => {
+  const renderer = new ChartJSNodeCanvas({ width: 800, height: 300 });
+  const image = await renderer.renderToBuffer({
+    type: "line", // Show a bar chart
+    backgroundColor: "rgba(236,197,1)",
+    data: {
+      labels: labels, // Set X-axis labels
+      datasets: [
+        {
+          label: convert, // Create the 'Users' dataset
+          data: datas, // Add data to the chart
+        },
+      ],
+    },
+  });
+  return new MessageAttachment(image, "graph.png");
+};
 
 module.exports = {
   data: new SlashCommandBuilder()
+    //#region Slash COmmand Builder
     .setName("fc-get")
-    .setDescription(
-      "Replies with current value of specified crypto pairing (default on ---/usdt)"
-    )
+    .setDescription("Generate graphic from coin historical data")
     .addStringOption((option) =>
       option
         .setName("symbol")
         .setDescription(
           "Insert a crypto currency symbol like 'btc' or with pairing 'btc/usdt'. Default pairing: usdt "
         )
-        .setRequired(true)
     )
     .addStringOption((option) =>
       option
         .setName("period")
-        .setDescription("Define the period to return percent change")
+        .setDescription("Define the period to fetch coin data")
         .setRequired(false)
-        .addChoice("1 heure", "1h")
-        .addChoice("24 heures", "24h")
-        .addChoice("7 jours", "7d")
-        .addChoice("30 jours", "30d")
+        .addChoice("1 jour", (60 * 60 * 24 - 1).toString())
+        .addChoice("7 jours", (60 * 60 * 24 * 7).toString())
+        .addChoice("14 jours", (60 * 60 * 24 * 14).toString())
+        .addChoice("30 jours", (60 * 60 * 24 * 30).toString())
     ),
+  //#endregion Slash Command Builder
   async execute(interaction) {
-    //#region const
-    // Deconstruct command option Symbol
-    const pairing = interaction.options
-      .getString("symbol")
-      .trim()
-      .toUpperCase()
-      .split("/");
+    //#region coingecko
+    //? Deconstruct command option Symbol
+    const pairing = !interaction.options.getString("symbol")
+      ? ""
+      : interaction.options.getString("symbol").trim().split("/");
 
-    // Define request query parameters
-    const symbol = pairing[0];
+    //? Define request query parameters
+    const symbol = !pairing[0] ? DEFAULT_COIN : pairing[0];
     const convert = !pairing[1] ? DEFAULT_CONVERT : pairing[1];
+    const to = Date.now() / 1000;
+    const from =
+      to -
+      (!interaction.options.getString("period")
+        ? DEFAULT_PERIOD
+        : interaction.options.getString("period"));
     //: Build request to CoinMarketCap API
     const requestOptions = {
       method: "GET",
-      uri: "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest",
+      uri: COINGECKO_API.replace(/__id__/g, symbol),
       qs: {
-        symbol: symbol,
-        convert: convert,
+        vs_currency: convert,
+        from: from,
+        to: to,
       },
-      headers: {
-        "X-CMC_PRO_API_KEY": `${apiToken}`,
-      },
-      json: true,
-      gzip: true,
-    };
-    //#endregion cosnt
-
-    //#region chart
-    const graph = {
-      chart: {
-        type: "bar", // Show a bar chart
-        data: {
-          labels: [2012, 2013, 2014, 2015, 2016], // Set X-axis labels
-          datasets: [
-            {
-              label: "Users", // Create the 'Users' dataset
-              data: [120, 60, 50, 180, 120], // Add data to the chart
-            },
-          ],
-        },
-      },
-    };
-
-    const requestOptionsGraph = {
-      method: "POST",
-      uri: "https://quickchart.io/chart/create",
-      body: graph,
       headers: {
         "Content-Type": "application/json",
       },
       json: true,
     };
 
-    await rp(requestOptionsGraph)
-      .then((response) => {
-        console.log(response);
-        chartEmbed = new MessageEmbed({
-          title: "Title",
-          description: "Description with useless content.",
-          color: "YELLOW",
-          image: {
-            url: response["url"],
-          },
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    //#endregion
-
-    //: Request Crypto Market Cap Api
+    //: Request CoinGecko Api
     await rp(requestOptions)
       .then((response) => {
         // Get currency information
-        const currency = response["data"][symbol];
-        const quote = currency["quote"][convert];
-
-        const name = currency["name"];
-        const price = quote["price"].toFixed(5);
-        const period = !interaction.options.getString("period")
-          ? DEFAULT_PERIOD
-          : interaction.options.getString("period");
-        const percent = quote["percent_change_" + period].toFixed(2);
-
-        interaction.reply(
-          `${name}: ${price} ${convert} | ${percent}%  ${period}`
-        );
+        coinData = response["prices"];
       })
       .catch((err) => {
         console.log("API call error:", err.message);
-        interaction.reply(
-          "There was an error while fetching currency informations. \nPlease check that you entered a existing currency / pairing or period."
-        );
+        interaction.reply(err.message);
       });
+    //#endregion coingecko
+
+    //#region chart
+    let labels = [];
+    let data = [];
+    // console.log(coinData.length);
+    for (let i = 0; i < coinData.length; i++) {
+      console.log(coinData[i]);
+      let date = new Date(coinData[i][0]);
+      labels.push(
+        date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear()
+      );
+      data.push(coinData[i][1]);
+    }
+
+    chartEmbed = new MessageEmbed({
+      title: symbol,
+      color: "YELLOW",
+    });
+    chartEmbed.setImage("attachment://graph.png");
+    const attachment = await generateCanva(labels, data, convert);
+
+    interaction.reply({ embeds: [chartEmbed], files: [attachment] });
+    //#endregion
   },
 };
