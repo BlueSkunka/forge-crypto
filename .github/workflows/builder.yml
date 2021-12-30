@@ -34,4 +34,6 @@ jobs:
       - run: 'echo {    "token": "$env:TOKEN",    "clientId": "$env:CLIENT_ID",    "guildId": "$env:GUILD_ID",    "apiToken": "$env:API_TOKEN"} >> ./config.json'
       - name: install dependencies
         run: npm ci
+      - name: install dependencies
+        run: npm install
       - run: node deploy-commands.js
