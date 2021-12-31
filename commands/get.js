@@ -1,43 +1,28 @@
 //: /get {pair}
 
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { apiToken } = require("../config.json");
 const rp = require("request-promise");
 const { MessageEmbed, MessageAttachment } = require("discord.js");
-const { Chart } = require("chart.js");
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const DEFAULT_COIN = "bitcoin";
 const DEFAULT_CONVERT = "usd";
-const DEFAULT_PERIOD = 60 * 60 * 24 - 1; //24h
-const DEFAULT_GRANULARITY = 1;
+const DEFAULT_PERIOD_1_DAY = 60 * 60 * 24; //24h
+const DEFAULT_PERIOD_7_DAY = DEFAULT_PERIOD_1_DAY * 7;
+const DEFAULT_PERIOD_14_DAY = DEFAULT_PERIOD_1_DAY * 14;
+const DEFAULT_PERIOD_30_DAY = DEFAULT_PERIOD_1_DAY * 30;
+const DEFAULT_PERIOD = DEFAULT_PERIOD_1_DAY;
 const COINGECKO_API =
   "https://api.coingecko.com/api/v3/coins/__id__/market_chart/range";
 let chartEmbed = {};
 let coinData = {};
 
-const generateCanva = async (labels, datas, convert) => {
-  const renderer = new ChartJSNodeCanvas({ width: 800, height: 300 });
-  const image = await renderer.renderToBuffer({
-    type: "line", // Show a bar chart
-    backgroundColor: "rgba(236,197,1)",
-    data: {
-      labels: labels, // Set X-axis labels
-      datasets: [
-        {
-          label: convert, // Create the 'Users' dataset
-          data: datas, // Add data to the chart
-        },
-      ],
-    },
-  });
-  return new MessageAttachment(image, "graph.png");
-};
-
 module.exports = {
   data: new SlashCommandBuilder()
     //#region Slash COmmand Builder
     .setName("fc-get")
-    .setDescription("Generate graphic from coin historical data")
+    .setDescription(
+      "Generate graphic from coin historical data - see help command for more details (WIP)"
+    )
     .addStringOption((option) =>
       option
         .setName("symbol")
@@ -50,10 +35,10 @@ module.exports = {
         .setName("period")
         .setDescription("Define the period to fetch coin data")
         .setRequired(false)
-        .addChoice("1 jour", (60 * 60 * 24 - 1).toString())
-        .addChoice("7 jours", (60 * 60 * 24 * 7).toString())
-        .addChoice("14 jours", (60 * 60 * 24 * 14).toString())
-        .addChoice("30 jours", (60 * 60 * 24 * 30).toString())
+        .addChoice("1 jour", DEFAULT_PERIOD_1_DAY.toString())
+        .addChoice("7 jours", DEFAULT_PERIOD_7_DAY.toString())
+        .addChoice("14 jours", DEFAULT_PERIOD_14_DAY.toString())
+        .addChoice("30 jours", DEFAULT_PERIOD_30_DAY.toString())
     ),
   //#endregion Slash Command Builder
   async execute(interaction) {
@@ -67,11 +52,10 @@ module.exports = {
     const symbol = !pairing[0] ? DEFAULT_COIN : pairing[0];
     const convert = !pairing[1] ? DEFAULT_CONVERT : pairing[1];
     const to = Date.now() / 1000;
-    const from =
-      to -
-      (!interaction.options.getString("period")
-        ? DEFAULT_PERIOD
-        : interaction.options.getString("period"));
+    const period = !interaction.options.getString("period")
+      ? DEFAULT_PERIOD
+      : interaction.options.getString("period");
+    const from = to - period;
     //: Build request to CoinMarketCap API
     const requestOptions = {
       method: "GET",
@@ -102,15 +86,74 @@ module.exports = {
     //#region chart
     let labels = [];
     let data = [];
+    console.log(period, DEFAULT_PERIOD_1_DAY);
     // console.log(coinData.length);
     for (let i = 0; i < coinData.length; i++) {
-      console.log(coinData[i]);
       let date = new Date(coinData[i][0]);
-      labels.push(
-        date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear()
-      );
+
+      if (period === DEFAULT_PERIOD_1_DAY) {
+        labels.push(date.getHours() + "h" + date.getMinutes());
+      } else {
+        labels.push(
+          date.getDate() +
+            "-" +
+            (date.getMonth() + 1) +
+            "-" +
+            date.getFullYear()
+        );
+      }
+
       data.push(coinData[i][1]);
     }
+
+    const generateCanva = async (labels, datas, convert) => {
+      const renderer = new ChartJSNodeCanvas({
+        type: "png",
+        width: 1600,
+        height: 600,
+        backgroundColour: "#333333",
+      });
+      const image = await renderer.renderToBuffer({
+        type: "line", // Show a bar chart
+        data: {
+          labels: labels, // Set X-axis labels
+          datasets: [
+            {
+              label: convert, // Create the 'Users' dataset
+              data: datas, // Add data to the chart
+              backgroundColor: "#c49a02",
+              borderColor: "#ecc501",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              ticks: {
+                callback: function (val, index) {
+                  switch (period) {
+                    case DEFAULT_PERIOD_7_DAY:
+                      return index % 7 === 0 ? this.getLabelForValue(val) : "";
+                      break;
+                    case DEFAULT_PERIOD_14_DAY:
+                      return index % 14 === 0 ? this.getLabelForValue(val) : "";
+                      break;
+                    case DEFAULT_PERIOD_30_DAY:
+                      return index % 30 === 0 ? this.getLabelForValue(val) : "";
+                      break;
+                    default:
+                      return index % 3 === 0 ? this.getLabelForValue(val) : "";
+                      break;
+                  }
+                },
+              },
+            },
+          },
+        },
+      });
+      return new MessageAttachment(image, "graph.png");
+    };
 
     chartEmbed = new MessageEmbed({
       title: symbol,
