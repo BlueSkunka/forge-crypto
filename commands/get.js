@@ -86,10 +86,9 @@ module.exports = {
     //#region chart
     let labels = [];
     let data = [];
-    let borderColors = [];
 
     //Omit first data for display purpose
-    for (let i = 1; i < coinData.length; i++) {
+    for (let i = 0; i < coinData.length; i++) {
       let date = new Date(coinData[i][0]);
 
       // Build label
@@ -107,11 +106,6 @@ module.exports = {
 
       // data
       data.push(coinData[i][1]);
-
-      // bg-color
-      borderColors.push(
-        coinData[i - 1][1] > coinData[i][1] ? "#ab0000" : "#0f6b01"
-      );
     }
 
     const generateCanva = async (labels, datas, convert) => {
