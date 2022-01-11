@@ -174,6 +174,21 @@ module.exports = {
     });
     chartEmbed.setImage("attachment://graph.png");
     const attachment = await generateCanva(labels, data, convert);
+    const getTitle = async () => {
+      let percent = (coinData[0][1] * 100) / coinData[coinData.length - 1][1];
+      let sign = "";
+      if (Math.sign(percent) > 0) sign = "+";
+      if (Math.sign(percent) < 0) sign = "-";
+      return (
+        sign +
+        " " +
+        Math.round(Math.abs(percent) * 100) / 100 +
+        "% en " +
+        period / 86400 +
+        " jours"
+      );
+    };
+    chartEmbed.setDescription(await getTitle());
 
     interaction.reply({ embeds: [chartEmbed], files: [attachment] });
     //#endregion
