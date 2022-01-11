@@ -129,7 +129,7 @@ module.exports = {
             {
               label: convert, // Create the 'Users' dataset
               data: datas, // Add data to the chart
-              backgroundColor: "#c49a02",
+              backgroundColor: "#)=ecc501",
               borderColor: "#ecc501",
             },
           ],
@@ -169,7 +169,7 @@ module.exports = {
     };
 
     chartEmbed = new MessageEmbed({
-      title: symbol,
+      title: symbol + "/" + convert,
       color: "YELLOW",
     });
     chartEmbed.setImage("attachment://graph.png");
