@@ -80,6 +80,8 @@ module.exports = {
       .catch((err) => {
         console.log("API call error:", err.message);
         interaction.reply(err.message);
+        //TODO stat sur coingecko + crypto
+        return;
       });
     //#endregion coingecko
 

@@ -3,6 +3,7 @@ const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
 const { token } = require("./config.json");
 const { dirname } = require("path");
+const StatModule = require("./modules/stats.js");
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
@@ -37,8 +38,10 @@ client.on("interactionCreate", async (interaction) => {
 
   try {
     await command.execute(interaction);
+    StatModule.CountCommand(command.data.name, false);
   } catch (error) {
     console.error(error);
+    StatModule.CountCommand(command.data.name, true);
     await interaction.reply({
       content: "There was an error while executing this command!",
       ephemeral: true,
