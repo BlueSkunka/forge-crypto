@@ -86,11 +86,13 @@ module.exports = {
     //#region chart
     let labels = [];
     let data = [];
-    console.log(period, DEFAULT_PERIOD_1_DAY);
-    // console.log(coinData.length);
-    for (let i = 0; i < coinData.length; i++) {
+    let borderColors = [];
+
+    //Omit first data for display purpose
+    for (let i = 1; i < coinData.length; i++) {
       let date = new Date(coinData[i][0]);
 
+      // Build label
       if (period === DEFAULT_PERIOD_1_DAY) {
         labels.push(date.getHours() + "h" + date.getMinutes());
       } else {
@@ -103,7 +105,13 @@ module.exports = {
         );
       }
 
+      // data
       data.push(coinData[i][1]);
+
+      // bg-color
+      borderColors.push(
+        coinData[i - 1][1] > coinData[i][1] ? "#ab0000" : "#0f6b01"
+      );
     }
 
     const generateCanva = async (labels, datas, convert) => {
@@ -148,6 +156,11 @@ module.exports = {
                   }
                 },
               },
+            },
+          },
+          elements: {
+            point: {
+              radius: 0,
             },
           },
         },
