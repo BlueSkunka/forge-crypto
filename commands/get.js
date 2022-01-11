@@ -175,7 +175,9 @@ module.exports = {
     chartEmbed.setImage("attachment://graph.png");
     const attachment = await generateCanva(labels, data, convert);
     const getTitle = async () => {
-      let percent = (coinData[0][1] * 100) / coinData[coinData.length - 1][1];
+      let min = coinData[0][1];
+      let max = coinData[coinData.length - 1][1];
+      let percent = ((max - min) * 100) / max;
       let sign = "";
       if (Math.sign(percent) > 0) sign = "+";
       if (Math.sign(percent) < 0) sign = "-";
