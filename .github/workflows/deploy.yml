@@ -1,0 +1,22 @@
+name: Build & Deploy
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: debian-latest
+    steps:
+      - name: Pull master branch
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{secrets.SRV_HOST}}
+          username: ${{secrets.SRV_USER}}
+          password: ${{secrets.SRV_PASSW}}
+
+          script: |
+            pm2 stop forge-crypto
+            rm -rf forge-crypto/
+            mkdir forge-crypto
+            cd forge-crypto
+            git clone
