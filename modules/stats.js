@@ -16,7 +16,9 @@ module.exports = class StatModule {
   static CountCommand(commandName, failed) {
     let data = FileModule.ReadFile(commandFile);
 
-    if (!data["commands"][commandName]) {
+    if (null === data) {
+      data = { "commands": { commandName: this.BuildNewCommand(failed) } };
+    } else if (!data["commands"][commandName]) {
       data["commands"][commandName] = this.BuildNewCommand(failed);
     } else {
       data["commands"][commandName]["hits"]++;

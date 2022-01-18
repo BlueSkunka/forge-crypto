@@ -7,7 +7,7 @@ module.exports = class FileModule {
       return JSON.parse(data);
     } catch (error) {
       console.error(error);
-      return;
+      return null;
     }
   }
 
