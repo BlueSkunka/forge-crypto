@@ -99,10 +99,10 @@ module.exports = {
       } else {
         labels.push(
           date.getDate() +
-            "-" +
-            (date.getMonth() + 1) +
-            "-" +
-            date.getFullYear()
+          "-" +
+          (date.getMonth() + 1) +
+          "-" +
+          date.getFullYear()
         );
       }
 
