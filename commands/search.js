@@ -8,7 +8,7 @@ module.exports = {
         .setName("fc-search")
         .setDescription("Search for currency name from symbol")
         .addStringOption((option) =>
-            option.setName("symbol").setDescription("Search for currency info")
+            option.setName("symbol").setDescription("Search for currency info").setRequired(true)
         ),
     async execute(interaction) {
         const currencies = FileModule.ReadFile(filePath);
