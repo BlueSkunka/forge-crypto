@@ -24,6 +24,8 @@ module.exports = {
         let hasMatched;
         let matchedCurrencies = [];
 
+        await interaction.deferReply();
+
         for (let i = 0; i < Object.keys(currencies).length; i++) {
             if (
                 currencies[i]["symbol"] == symbol ||
@@ -50,7 +52,7 @@ module.exports = {
                 description: response
             });
 
-            interaction.reply({ embeds: [embedMessage] });
+            interaction.editReply({ embeds: [embedMessage] });
         }
     },
 };
