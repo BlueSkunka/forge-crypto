@@ -1,10 +1,10 @@
 const fs = require("fs");
 
 module.exports = class FileModule {
-  static ReadFile(filePath) {
+  static ReadFile(filePath, jsonParse = true) {
     try {
       let data = fs.readFileSync(filePath, "utf-8");
-      return JSON.parse(data);
+      return jsonParse ? JSON.parse(data) : data;
     } catch (error) {
       console.error(error);
       return null;
