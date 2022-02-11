@@ -1,9 +1,38 @@
 // Require the necessary discord.js classes
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
-const { token } = require("./config.json");
+const { token, etherscanApiKey } = require("./config.json");
 const { dirname } = require("path");
 const StatModule = require("./modules/stats.js");
+const rp = require("request-promise");
+const cron = require("cron");
+
+// gastracker
+const gastrackerEndpoint =
+  "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=__apiKey__";
+
+//: Cron Tasks
+const cronGastrackerFn = async function () {
+  await rp({
+    method: "GET",
+    uri: gastrackerEndpoint.replace(/__apiKey__/g, etherscanApiKey),
+    headers: { "Content-Type": "application/json" },
+    json: true,
+  })
+    .then((response) => {
+      let safe = response["result"]["SafeGasPrice"];
+      let proposed = response["result"]["ProposeGasPrice"];
+      let fast = response["result"]["FastGasPrice"];
+      let base = Math.floor(response["result"]["suggestBaseFee"]);
+
+      client.user.setActivity(
+        `Gas: ${safe} | ${proposed} | ${fast} | Base: ${base}`
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
@@ -26,6 +55,10 @@ for (const file of commandFiles) {
 // When the client is ready, run this code (only once)
 client.once("ready", () => {
   console.log("Forge | Crypto is ready to work !");
+
+  // Toutes les 5 secondes
+  let cronGastracker = new cron.CronJob("*/10 * * * * *", cronGastrackerFn);
+  cronGastracker.start();
 });
 
 // Listen on new interaction

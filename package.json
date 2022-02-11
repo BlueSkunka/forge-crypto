@@ -27,6 +27,7 @@
     "@discordjs/rest": "^0.2.0-canary.0",
     "chart.js": "^3.7.0",
     "chartjs-node-canvas": "^4.1.5",
+    "cron": "^1.8.2",
     "discord-api-types": "^0.25.2",
     "discord.js": "^13.3.1",
     "request-promise": "^4.2.6"
