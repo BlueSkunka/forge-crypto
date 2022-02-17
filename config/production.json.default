@@ -1,0 +1,13 @@
+{
+    "channels": {
+        "general": 918560483462750262
+    },
+    "bot": {
+        "token": "",
+        "clientId": "",
+        "guildId": "",
+        "apiToken": "",
+        "etherscanApiKey": "",
+        "deeplKey": ""
+    }
+}
