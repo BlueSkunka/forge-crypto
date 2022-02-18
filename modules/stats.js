@@ -8,7 +8,7 @@ module.exports = class StatModule {
   static BuildNewCommand(failed) {
     return {
       hits: 1,
-      success: +!failed,
+      success: +!failed, // TODO: Maybe not understandable
       failed: +failed,
     };
   }
@@ -26,7 +26,7 @@ module.exports = class StatModule {
       data["commands"] = {};
     }
 
-    if (!data["commands"][commandName]) {
+    if (!data["commands"][commandName]) { // TODO: Add comments
       data["commands"][commandName] = this.BuildNewCommand(failed);
     } else {
       data["commands"][commandName]["hits"]++;

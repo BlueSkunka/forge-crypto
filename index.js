@@ -10,19 +10,10 @@ const config = require('config');
 const { token, etherscanApiKey, deeplKey } = config.bot;
 
 // Used for Welcoming feature
-const { channels } = config;
-const { sentences } = require('./data/welcoming_sentences.json');
-let supportedLanguages = [];
+const WelcomingModule = require("./modules/welcoming.js");
 
-getDeeplSupportedLanguages().then((response) => {
-  response.supported_languages.forEach((elem) => {
-    if (!supportedLanguages.includes(elem.target_lang)){
-      supportedLanguages.push(elem.target_lang)
-    }
-  })
-}).catch(err => {
-  console.log(err)
-});
+
+WelcomingModule.FetchAvailableLanguages();
 
 // gastracker
 const gastrackerEndpoint =
@@ -99,66 +90,13 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-/**
- * Request a translation to Deepl a random sentences with a random language
- * @returns Promise
- */
-async function getWelcomeSentence(){
-  const rdmNumber = parseInt(Math.floor(Math.random() * sentences.length));
-  const rdmLang = parseInt(Math.floor(Math.random() * supportedLanguages.length));
-  const sentence = sentences[rdmNumber];
-  const lang = supportedLanguages[rdmLang];
 
-  const requestOptions = {
-    method: "GET",
-    uri: 'https://api-free.deepl.com/v2/translate',
-    qs: {
-      text: sentence,
-      auth_key: deeplKey,
-      target_lang: lang.toString().toUpperCase(),
-    },
-    headers: {
-      "Content-Type": "application/json",
-    },
-    json: true,
-  };
-
-  return await rp(requestOptions);
-}
-
-/**
- * Get all available languages on deepl API
- * @returns Promise 
- */
-async function getDeeplSupportedLanguages(){
-  const requestOptions = {
-    method: "GET",
-    uri: 'https://api-free.deepl.com/v2/glossary-language-pairs',
-    headers: {
-      "Authorization": "DeepL-Auth-Key " + deeplKey,
-      "Content-Type": "application/json",
-    },
-    json: true,
-  };
-
-  return await rp(requestOptions)
-}
 
 /**
  * Listen on new member join our discord
  */
 client.on('guildMemberAdd', member => {
-  const channel = member.guild.channels.cache.find(channel => channel.id === channels.general); // Get desired channel with an id specified in config
-  
-
-  getWelcomeSentence().then(response => {
-    const { text } = response.translations[0] // The translated text from Deepl
-    const replacedText = text.replace('%%%%s', member.user.toString())
-
-    channel.send(replacedText); 
-  }).catch(err => {
-    console.log(err)
-  });
+  WelcomingModule.MemberWelcoming(member);
 });
 
 // Login to Discord with your client's token
