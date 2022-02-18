@@ -46,7 +46,7 @@ const cronGastrackerFn = async function () {
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_PRESENCES] });
 
 client.commands = new Collection();
-console.log(__dirname);
+
 // Read commands folder
 const commandFiles = fs
   .readdirSync(__dirname.concat("/commands"))
