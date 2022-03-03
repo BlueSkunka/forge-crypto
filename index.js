@@ -1,13 +1,11 @@
 // Require the necessary discord.js classes
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
-const { dirname } = require("path");
 const StatModule = require("./modules/stats.js");
-const rp = require("request-promise");
-const cron = require("cron");
+const GastrackerModule = require("./modules/gastracker");
 
 const config = require('config');
-const { token, etherscanApiKey, deeplKey } = config.bot;
+const { token } = config.bot;
 
 // Used for Welcoming feature
 const WelcomingModule = require("./modules/welcoming.js");
@@ -15,32 +13,7 @@ const WelcomingModule = require("./modules/welcoming.js");
 
 WelcomingModule.FetchAvailableLanguages();
 
-// gastracker
-const gastrackerEndpoint =
-  "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=__apiKey__";
 
-//: Cron Tasks
-const cronGastrackerFn = async function () {
-  await rp({
-    method: "GET",
-    uri: gastrackerEndpoint.replace(/__apiKey__/g, etherscanApiKey),
-    headers: { "Content-Type": "application/json" },
-    json: true,
-  })
-    .then((response) => {
-      let safe = response["result"]["SafeGasPrice"];
-      let proposed = response["result"]["ProposeGasPrice"];
-      let fast = response["result"]["FastGasPrice"];
-      let base = Math.floor(response["result"]["suggestBaseFee"]);
-
-      client.user.setActivity(
-        `Gas: ${safe} | ${proposed} | ${fast} | Base: ${base}`
-      );
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_PRESENCES] });
@@ -64,9 +37,7 @@ for (const file of commandFiles) {
 client.once("ready", () => {
   console.log("Forge | Crypto is ready to work !");
 
-  // Toutes les 5 secondes
-  let cronGastracker = new cron.CronJob("*/10 * * * * *", cronGastrackerFn);
-  cronGastracker.start();
+  GastrackerModule.start(client.user);
 });
 
 // Listen on new interaction
