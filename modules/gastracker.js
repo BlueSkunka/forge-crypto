@@ -2,7 +2,6 @@ const rp = require("request-promise");
 const config = require('config');
 const cron = require("cron");
 const { etherscanApiKey } = config.bot;
-const { User } = require("discord.js");
 
 module.exports = class GastrackerModule {
 
@@ -18,10 +17,10 @@ module.exports = class GastrackerModule {
             json: true,
         })
             .then((response) => {
-                let safe = response["result"]["SafeGasPrice"];
-                let proposed = response["result"]["ProposeGasPrice"];
-                let fast = response["result"]["FastGasPrice"];
-                let base = Math.floor(response["result"]["suggestBaseFee"]);
+                const safe = response["result"]["SafeGasPrice"];
+                const proposed = response["result"]["ProposeGasPrice"];
+                const fast = response["result"]["FastGasPrice"];
+                const base = Math.floor(response["result"]["suggestBaseFee"]);
 
                 user.setActivity(
                     `Gas: ${safe} | ${proposed} | ${fast} | Base: ${base}`
@@ -34,7 +33,7 @@ module.exports = class GastrackerModule {
 
     static start(user) {
         // Toutes les 5 secondes
-        let cronGastracker = new cron.CronJob("*/10 * * * * *", GastrackerModule.cronGastrackerFn(user));
+        const cronGastracker = new cron.CronJob("*/5 * * * * *", GastrackerModule.cronGastrackerFn(user));
         cronGastracker.start();
     }
 
